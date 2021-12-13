@@ -21,6 +21,8 @@ const server = new ApolloServer({
         token: "uniquetoken"
       })
     }
+
+    return err;
   }
 });
 
