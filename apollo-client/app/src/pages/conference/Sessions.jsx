@@ -1,36 +1,98 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React, {useState} from "react";  
 import "./style-sessions.css";
 import { Link } from "react-router-dom"
 import { Formik, Field, Form } from "formik"
+import { gql, useQuery } from "@apollo/client";
 
-/* ---> Define queries, mutations and fragments here */
+const SESSION_INFO = gql`
+  fragment SessionInfo on Session {
+      id,
+      title,
+      room,
+      day,
+      description @include(if: $isDescription),
+      startsAt,
+      level, 
+      speakers {
+        id,
+        name
+      }
+  }
+`
+
+const SESSIONS = gql`
+  query sessions($day: String!, $isDescription: Boolean!) {
+    intro: sessions(day: $day, level: "Introductory and overview") {
+      ...SessionInfo
+    }
+    intermediate: sessions(day: $day, level: "Intermediate") {
+      ...SessionInfo
+    }
+    advanced: sessions(day: $day, level: "Advanced") {
+      ...SessionInfo
+    }
+  }
+  ${SESSION_INFO}
+`
 
 function AllSessionList() {
    /* ---> Invoke useQuery hook here to retrieve all sessions and call SessionItem */
    return <SessionItem />
 }
 
-function SessionList () {
-  /* ---> Invoke useQuery hook here to retrieve sessions per day and call SessionItem */
-  return <SessionItem />
+function SessionList ({ day }) {
+  const isDescription = true;
+  const { loading, data, error } = useQuery(SESSIONS, {
+    variables: { day, isDescription }
+  });
+
+  if (loading) return <p>Loading sessions...</p>
+
+  if (error) return <p>Something went wrong...</p>
+
+  return [
+    ...data.intro,
+    ...data.intermediate,
+    ...data.advanced
+  ].map((session) => {
+    return <SessionItem 
+      key={session.id}
+      session={{
+        ...session
+      }}
+    />
+  })
 }
 
-function SessionItem() {
+function SessionItem({ session }) {
+  const { id, title, day, level, room, speakers, startsAt, description } = session;
 
   /* ---> Replace hard coded session values with data that you get back from GraphQL server here */
   return (
-    <div key={'id'} className="col-xs-12 col-sm-6" style={{ padding: 5 }}>
+    <div key={id} className="col-xs-12 col-sm-6" style={{ padding: 5 }}>
       <div className="panel panel-default">
         <div className="panel-heading">
-          <h3 className="panel-title">{"title"}</h3>
-          <h5>{`Level: `}</h5>
+          <h3 className="panel-title">{title}</h3>
+          <h5>{`Level: ${level}`}</h5>
         </div>
         <div className="panel-body">
-          <h5>{`Day: `}</h5>
-          <h5>{`Room Number: `}</h5>
-          <h5>{`Starts at: `}</h5>
+          <h5>{`Day: ${day}`}</h5>
+          <h5>{`Description: ${description}`}</h5>
+          <h5>{`Room Number: ${room}`}</h5>
+          <h5>{`Starts at: ${startsAt}`}</h5>
         </div>
         <div className="panel-footer">
+          {
+            speakers.map(({ id, name }) => {
+              return <span key={id} style={{ padding: 2 }}>
+                <Link className="btn btn-default btn-lg"
+                to={`/conference/speaker/${id}`}>
+                  View {name}'s profile 
+                </Link>
+              </span>
+            })
+          }
         </div>
       </div>
     </div>

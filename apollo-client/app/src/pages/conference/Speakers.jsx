@@ -1,30 +1,70 @@
+import { gql, useQuery } from "@apollo/client";
 import * as React from "react";
+import { useParams } from "react-router-dom";
 import "./style-sessions.css";
 
-/* ---> Define queries, mutations and fragments here */
+const SPEAKER_INFO = gql`
+  fragment SpeakerInfo on Speaker {
+      id,
+      bio,
+      name,
+      sessions {
+        title,
+        id
+      }
+  }
+`
+
+const SPEAKERS = gql`
+  query speakers {
+    speakers {
+      ...SpeakerInfo
+    }
+  }
+
+  ${SPEAKER_INFO}
+`
+
+const SPEAKER_BY_ID = gql`
+  query speakers($id: ID!) {
+    speakerById(id: $id) {
+      ...SpeakerInfo
+    }
+  }
+
+  ${SPEAKER_INFO}
+`
 
 const SpeakerList = () => {
+  const { loading, error, data } = useQuery(SPEAKERS);
+
+  if (error) return <p>Something went wrong</p>
+  if (loading) return <p>Loading speakers...</p>
 
   /* ---> Replace hardcoded speaker values with data that you get back from GraphQL server here */
   const featured = false;
 
-  return (
-		<div
-      key={'id'}
+  return data.speakers.map(({ id, bio, name, sessions }) => {
+    return <div
+      key={id}
       className="col-xs-12 col-sm-6 col-md-6"
       style={{ padding: 5 }}
     >
       <div className="panel panel-default">
         <div className="panel-heading">
-          <h3 className="panel-title">{'Speaker: '}</h3>
+          <h3 className="panel-title">{`Speaker: ${name}`}</h3>
         </div>
         <div className="panel-body">
-          <h5>{'Bio: ' }</h5>
+          <h5>{`Bio: ${bio}` }</h5>
         </div>
         <div className="panel-footer">
           <h4>Sessions</h4>
 					{
-						/* ---> Loop through speaker's sessions here */
+            sessions.map((session) => {
+              return <span key={session.id} style={{ padding: 2}}>
+                <p>{session.title}</p>
+              </span>
+            })
 					}
           <span>	
             <button	
@@ -47,25 +87,34 @@ const SpeakerList = () => {
         </div>
       </div>
     </div>
-	);
+  });
 };
 
 const SpeakerDetails = () => {
+  const { speaker_id } = useParams();
+  console.log(speaker_id)
+  const { loading, error, data } = useQuery(SPEAKER_BY_ID, {
+    variables: { id: speaker_id }
+  });
 
-    /* ---> Replace hardcoded speaker values with data that you get back from GraphQL server here */
+  if (error) return <p>Something went wrong</p>
+  if (loading) return <p>Loading speakers...</p>
+
+  const { id, name, bio, sessions } = data.speakerById;
+
   return (
-    <div key={'id'} className="col-xs-12" style={{ padding: 5 }}>
+    <div key={id} className="col-xs-12" style={{ padding: 5 }}>
       <div className="panel panel-default">
         <div className="panel-heading">
-          <h3 className="panel-title">{'name'}</h3>
+          <h3 className="panel-title">{name}</h3>
         </div>
         <div className="panel-body">
-          <h5>{'bio'}</h5>
+          <h5>{bio}</h5>
         </div>
         <div className="panel-footer">
-          {{
-						/* ---> Loop through speaker's sessions here */
-					}}
+          {sessions.map(session => {
+            return <p key={session.id}>{session.title}</p>
+          })}
         </div>
       </div>
     </div>
