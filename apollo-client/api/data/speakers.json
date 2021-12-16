@@ -48,7 +48,8 @@
           "name": "Rapid Cross-Platform AR Development with React Native"
         }
       ],
-      "name": "Xoan Chapman"
+      "name": "Xoan Chapman",
+      "featured": true
     },
     {
       "id": "223d2b9d-a582-4e14-bebb-d636fb030bda",
@@ -107,7 +108,8 @@
           "name": "Is This a Button? A Question Your Users Should Never Ask."
         }
       ],
-      "name": "Rebecca Silva"
+      "name": "Rebecca Silva",
+      "featured": true
     },
     {
       "id": "3c774b73-d976-4916-ac8a-fac04a4bc9ca",
@@ -195,7 +197,8 @@
           "name": "Supercharge your CI/CD pipeline using Infrastructure as Code and Octopus Deploy"
         }
       ],
-      "name": "Connie Castillo"
+      "name": "Connie Castillo",
+      "featured": true
     },
     {
       "id": "0c4f74c9-6be8-40d0-b588-674d3b783472",
@@ -217,7 +220,8 @@
           "name": "Form Field Design"
         }
       ],
-      "name": "Ann Gordon"
+      "name": "Ann Gordon",
+      "featured": true
     },
     {
       "id": "a80b0ca3-88a8-4244-b257-7891cbd84fdc",

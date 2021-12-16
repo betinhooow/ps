@@ -3,7 +3,7 @@ import React, {useState} from "react";
 import "./style-sessions.css";
 import { Link } from "react-router-dom"
 import { Formik, Field, Form } from "formik"
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 
 const SESSION_INFO = gql`
   fragment SessionInfo on Session {
@@ -19,6 +19,27 @@ const SESSION_INFO = gql`
         name
       }
   }
+`
+
+const CREATE_SESSION = gql`
+  mutation createSession($session: SessionInput!) {
+    createSession(session: $session) {
+      id,
+      title,
+      description,
+      day,
+      level
+    }
+  }
+`
+
+const ALL_SESSIONS = gql`
+  query sessions($isDescription: Boolean!) {
+    sessions {
+      ...SessionInfo
+    }
+  }
+  ${SESSION_INFO}
 `
 
 const SESSIONS = gql`
@@ -37,8 +58,22 @@ const SESSIONS = gql`
 `
 
 function AllSessionList() {
-   /* ---> Invoke useQuery hook here to retrieve all sessions and call SessionItem */
-   return <SessionItem />
+  const isDescription = true;
+  const { loading, data, error } = useQuery(ALL_SESSIONS, {
+    variables: { isDescription }
+  });
+
+  if (loading) return <p>Loading sessions...</p>
+  if (error) return <p>Something went wrong...</p>
+
+  return data.sessions.map(session => {
+    return <SessionItem 
+      key={session.id}
+      session={{
+        ...session
+      }}
+    />
+  })
 }
 
 function SessionList ({ day }) {
@@ -137,8 +172,25 @@ export function Sessions() {
 }
 
 export function SessionForm() {	
+  const updateSessions = (cache, { data }) => {
+    cache.modify({
+      fields: {
+        sessions(existingSessions = []) {
+          const newSession = data.createSession;
+          cache.writeQuery({
+            query: ALL_SESSIONS,
+            data: { newSession, ...existingSessions }
+          })
+        }
+      }
+    })
+  }
+  const [create, { called, error }] = useMutation(CREATE_SESSION, {
+    update: updateSessions
+  })
 
-  /* ---> Call useMutation hook here to create new session and update cache */
+  if(called) return <p>Session Inserted!</p>
+  if(error) return <p>Something went wrong!</p>
 
   return (	
     <div	
@@ -157,8 +209,8 @@ export function SessionForm() {
           day: "",	
           level: "",	
         }}	
-        onSubmit={() => {
-          /* ---> Call useMutation mutate function here to create new session */
+        onSubmit={async (values) => {
+          await create({ variables: { session: values }})
         }}	
       >	
         {() => (	

@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import * as React from "react";
 import { useParams } from "react-router-dom";
 import "./style-sessions.css";
@@ -11,7 +11,17 @@ const SPEAKER_INFO = gql`
       sessions {
         title,
         id
-      }
+      },
+      featured
+  }
+`
+
+const FEATURED_SPEAKER = gql`
+  mutation markFeatured($speakerId: ID!, $featured: Boolean!) {
+    markFeatured(speakerId: $speakerId, featured: $featured) {
+      id,
+      featured
+    }
   }
 `
 
@@ -37,14 +47,12 @@ const SPEAKER_BY_ID = gql`
 
 const SpeakerList = () => {
   const { loading, error, data } = useQuery(SPEAKERS);
+  const [markFeature] = useMutation(FEATURED_SPEAKER);
 
   if (error) return <p>Something went wrong</p>
   if (loading) return <p>Loading speakers...</p>
 
-  /* ---> Replace hardcoded speaker values with data that you get back from GraphQL server here */
-  const featured = false;
-
-  return data.speakers.map(({ id, bio, name, sessions }) => {
+  return data.speakers.map(({ id, bio, name, sessions, featured }) => {
     return <div
       key={id}
       className="col-xs-12 col-sm-6 col-md-6"
@@ -70,8 +78,12 @@ const SpeakerList = () => {
             <button	
               type="button"	
               className="btn btn-default btn-lg"	
-              onClick={()=> {
-                /* ---> Call useMutation's mutate function to mark speaker as featured */
+              onClick={async ()=> {
+                await markFeature({
+                  variables: {
+                    speakerId: id, featured: true
+                  }
+                })
               }}	
               >	
                 <i	
