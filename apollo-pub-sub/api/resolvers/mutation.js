@@ -1,4 +1,5 @@
 const authUtils = require("../utils/auth");
+const FAVORITEUPDATES = 'FAVORITEUPDATES';
 
 module.exports = {
   createSession: async (parent, args, { dataSources, user }, info) => {
@@ -112,6 +113,15 @@ module.exports = {
         args.sessionId,
         context.user.sub
       );
+      const favorites = await context.dataSources.userDataSource.getFavorites(
+        args.sessionId
+      );
+      context.pubsub.publish(FAVORITEUPDATES, {
+        favorites: {
+          sessionId: args.sessionId,
+          count: favorites.lenght
+        }
+      })
       return user;
     }
     return undefined;
