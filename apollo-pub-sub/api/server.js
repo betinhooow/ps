@@ -1,29 +1,31 @@
-require("dotenv").config();
+require('dotenv').config();
 const http = require('http');
-const { ApolloServer } = require("apollo-server-express");
-const SessionDataSource = require("./datasources/sessions");
-const SpeakerDataSource = require("./datasources/speakers");
-const { UserDataSource } = require("./datasources/users");
+const { ApolloServer } = require('apollo-server-express');
 
-const { generateUserModel } = require("./models/user");
-const { AuthDirective } = require("./directives/AuthDirective");
+
+const SessionDataSource = require('./datasources/sessions');
+const SpeakerDataSource = require('./datasources/speakers');
+const { UserDataSource } = require('./datasources/users');
+
+const { generateUserModel } = require('./models/user');
+const { AuthDirective } = require('./directives/AuthDirective');
 
 const {
   createRateLimitTypeDef,
   createRateLimitDirective,
   defaultKeyGenerator,
-} = require("graphql-rate-limit-directive");
-const { PubSub } = require('graphql-subscriptions');
+} = require('graphql-rate-limit-directive');
+const { PubSub } = require('apollo-server');
 
-const depthLimit = require("graphql-depth-limit");
+const depthLimit = require('graphql-depth-limit');
 
-const { createComplexityLimitRule } = require("graphql-validation-complexity");
+const { createComplexityLimitRule } = require('graphql-validation-complexity');
 
-const typeDefs = require("./schema.js");
-const resolvers = require("./resolvers/index");
-const auth = require("./utils/auth");
-const cookieParser = require("cookie-parser");
-const express = require("express");
+const typeDefs = require('./schema.js');
+const resolvers = require('./resolvers/index');
+const auth = require('./utils/auth');
+const cookieParser = require('cookie-parser');
+const express = require('express');
 const app = express();
 const pubsub = new PubSub();
 
@@ -60,7 +62,7 @@ const server = new ApolloServer({
     depthLimit(3),
     createComplexityLimitRule(600, {
       onCost: (cost) => {
-        console.log("query cost:", cost);
+        console.log('query cost:', cost);
       },
     }),
   ],
@@ -76,7 +78,7 @@ const server = new ApolloServer({
       models: {
         User: generateUserModel({ user }),
       },
-      pubsub
+      pubsub,
     };
   },
 });
@@ -84,6 +86,7 @@ const server = new ApolloServer({
 server.applyMiddleware({ app });
 
 const httpServer = http.createServer(app);
+
 server.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(process.env.PORT || 4000, () => {
