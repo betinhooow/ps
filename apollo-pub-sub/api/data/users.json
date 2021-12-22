@@ -26,6 +26,17 @@
         "80310",
         "79874"
       ]
+    },
+    {
+      "email": "robertonobre90@gmail.com",
+      "hash": "$2a$10$ZwTkjeTZ/GLIIfoaYDaS/O6XeNfNXxAWnoAi326xs.5coBZnw/oVW",
+      "role": "USER",
+      "id": "a7f11734-25d0-4edf-ba71-ab706ddb8627",
+      "favorites": [
+        "82049",
+        "84375",
+        "80310"
+      ]
     }
   ]
 }

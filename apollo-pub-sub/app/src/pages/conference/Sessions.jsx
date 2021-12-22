@@ -137,20 +137,49 @@ function SessionItem({ session }) {
   );
 }
 
+const FAVORITES = gql`
+  subscription favorites{
+    favorites{
+      sessionId
+      count
+    }
+  }
+`;
+
 const SessionList = () => {
-  const { loading, error, data } = useQuery(SESSIONS);
+  const { loading, error, data, subscribeToMore } = useQuery(SESSIONS);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error :(</p>;
+
+  subscribeToMore({
+    document: FAVORITES,
+    updateQuery: (prev, { subscriptionData }) => {
+      if (!subscriptionData.data) return prev;
+
+      let newData = Object.assign({}, prev);
+      newData.sessions = prev.sessions.map((oldSession) => {
+        const session = Object.assign({}, oldSession);
+
+        if(session.id == subscriptionData.data.favorites.sessionId) {
+          session.favoriteCount = subscriptionData.data.favorites.count;
+        }
+
+        return session;
+      })
+
+      return newData;
+    } 
+  })
 
   return data.sessions.map((session) => (
     <SessionItem
       key={session.id}
       session={{
-        ...session,
         favorite: data.user?.favorites
           .map((favorite) => favorite.id)
           .includes(session.id),
+        ...session,
       }}
     />
   ));
@@ -173,10 +202,10 @@ const SessionDetails = () => {
   return (
     <SessionItem
       session={{
-        ...session,
         favorite: data.user?.favorites
           .map((favorite) => favorite.id)
           .includes(session.id),
+        ...session,
       }}
     />
   );

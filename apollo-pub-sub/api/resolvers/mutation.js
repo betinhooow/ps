@@ -116,10 +116,11 @@ module.exports = {
       const favorites = await context.dataSources.userDataSource.getFavorites(
         args.sessionId
       );
+      
       context.pubsub.publish(FAVORITEUPDATES, {
         favorites: {
           sessionId: args.sessionId,
-          count: favorites.lenght
+          count: favorites.length
         }
       })
       return user;

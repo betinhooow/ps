@@ -13,6 +13,7 @@ import { Footer } from "./Footer";
 import { ApolloProvider } from "./context/ApolloProvider";
 import { AuthProvider } from "./context/AuthProvider";
 import { useAppInit } from "./useAppInit";
+import { FavoriteCount } from "./pages/conference/FavoriteCount";
 
 function AppRouter() {
   const { loading } = useAppInit();
@@ -24,6 +25,9 @@ function AppRouter() {
           <p>Reticulating splines...</p>
         ) : (
           <Switch>
+            <Route path="/favorites">
+              <FavoriteCount />
+            </Route>
             <Route path="/media">
               <Media />
             </Route>
