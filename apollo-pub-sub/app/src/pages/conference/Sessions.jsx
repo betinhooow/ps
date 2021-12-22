@@ -138,8 +138,8 @@ function SessionItem({ session }) {
 }
 
 const FAVORITES = gql`
-  subscription favorites{
-    favorites{
+  subscription favorites($sessionId: ID){
+    favorites(sessionId: $sessionId){
       sessionId
       count
     }
@@ -154,6 +154,9 @@ const SessionList = () => {
 
   subscribeToMore({
     document: FAVORITES,
+    variables: {
+      //sessionId: data.sessions[1].id uncomment to enable filter wich session listen events
+    },
     updateQuery: (prev, { subscriptionData }) => {
       if (!subscriptionData.data) return prev;
 

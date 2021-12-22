@@ -79,7 +79,7 @@ module.exports = {
     const token = authUtils.createToken(existingUser);
 
     res.cookie("token", token, {
-      httpOnly: true,
+      httpOnly: false,
     });
 
     return {
