@@ -1,4 +1,4 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql, useMutation, useQuery, useApolloClient } from '@apollo/client';
 import Toolbar from '../components/Toolbar';
 
 const GET_SPEAKERS = gql`
@@ -53,6 +53,7 @@ const ADD_SPEAKERS = gql`
 
 const IndexPage = () => {
   const { loading, error, data } = useQuery(GET_SPEAKERS);
+  const apolloClient = useApolloClient();
   const [toggle] = useMutation(TOGGLE_SPEAKERS_FAVORITE);
   const [deleteSpeaker] = useMutation(DELETE_SPEAKERS);
   const [addSpeaker] = useMutation(ADD_SPEAKERS);
@@ -63,10 +64,40 @@ const IndexPage = () => {
 
   return (
     <>
-    <Toolbar insertSpeakerEvent={(first, last, favorite) => {
+    <Toolbar 
+    sortByIdDescending={() => {
+      const { speakers } = apolloClient.cache.readQuery({
+        query: GET_SPEAKERS
+      })
+      apolloClient.cache.writeQuery({
+        query: GET_SPEAKERS,
+        data: {
+          speakers: {
+            __typename: "SpeakersResult",
+            datalist: [...speakers.datalist].sort((a,b) => b.id - a.id)
+          }
+        }
+      })
+    }}
+    insertSpeakerEvent={(first, last, favorite) => {
       addSpeaker({
         variables: { first, last, favorite },
-        refetchQueries: [{query: GET_SPEAKERS}]
+        //refetchQueries: [{query: GET_SPEAKERS}]
+        update: (cache, { data: { addSpeaker }}) => {
+          const { speakers } = cache.readQuery({
+            query: GET_SPEAKERS
+          })
+
+          cache.writeQuery({
+            query: GET_SPEAKERS,
+            data: {
+              speakers: {
+                __typename: "SpeakerResults",
+                datalist: [addSpeaker, ...speakers.datalist]
+              }
+            }
+          })
+        }
       })
     }}/>
       <div className="container show-fav">
@@ -82,9 +113,18 @@ const IndexPage = () => {
                   </div>
                   <div className="fav-clm col-sm-5">
                     <div className="action">
-                      <span onClick={() => toggle({variables: {
+                      <span onClick={() => toggle({
+                        variables: {
                           speakerId: parseInt(id)
-                        }})}>
+                        },
+                        optimisticResponse: {
+                          __typename: "Mutation",
+                          toggleSpeakerFavorite: {
+                            id, first, last, favorite: !favorite,
+                            __typename: "Speaker"
+                          }
+                        }
+                        })}>
                         <div
                           className={
                             favorite === true
@@ -97,7 +137,28 @@ const IndexPage = () => {
                       <span onClick={() => {
                         deleteSpeaker({
                           variables: {speakerId: parseInt(id)},
-                          refetchQueries: [{query: GET_SPEAKERS}]
+                          //refetchQueries: [{query: GET_SPEAKERS}]
+                          optimisticResponse: {
+                            typename: "__mutation",
+                            deleteSpeaker: {
+                              id, first, last, favorite,
+                              __typename: "Speaker"
+                            }
+                          },
+                          update: (cache, { data: { deleteSpeaker }}) => {
+                            const { speakers } = cache.readQuery({
+                              query: GET_SPEAKERS
+                            })
+                            cache.writeQuery({
+                              query: GET_SPEAKERS,
+                              data: {
+                                speakers: {
+                                  __typename: "SpeakerResults",
+                                  datalist: speakers.datalist.filter(speaker => speaker.id != deleteSpeaker.id)
+                                }
+                              }
+                            })
+                          }
                         })
                       }}>
                         <i className='fa fa-trash red'></i> Delete
