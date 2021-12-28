@@ -1,3 +1,4 @@
+import { useApolloClient, useMutation } from '@apollo/client';
 import React, { useState } from 'react';
 import {
   Button,
@@ -10,8 +11,13 @@ import {
   ModalFooter,
   ModalHeader,
 } from 'reactstrap';
+import { ADD_SPEAKERS } from '../graphql/mutations';
+import { GET_SPEAKERS } from '../graphql/queries';
 
-const Toolbar = ({ insertSpeakerEvent, sortByIdDescending }) => {
+const Toolbar = () => {
+  const apolloClient = useApolloClient();
+  const [addSpeaker] = useMutation(ADD_SPEAKERS);
+
   const [modal, setModal] = useState(false);
 
   const toggle = () => {
@@ -24,7 +30,25 @@ const Toolbar = ({ insertSpeakerEvent, sortByIdDescending }) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    insertSpeakerEvent(first, last, favorite);
+    addSpeaker({
+      variables: { first, last, favorite },
+      //refetchQueries: [{query: GET_SPEAKERS}]
+      update: (cache, { data: { addSpeaker }}) => {
+        const { speakers } = cache.readQuery({
+          query: GET_SPEAKERS
+        })
+
+        cache.writeQuery({
+          query: GET_SPEAKERS,
+          data: {
+            speakers: {
+              __typename: "SpeakerResults",
+              datalist: [addSpeaker, ...speakers.datalist]
+            }
+          }
+        })
+      }
+    })
     setFirst('');
     setLast('');
     setFavorite(false);
@@ -41,7 +65,20 @@ const Toolbar = ({ insertSpeakerEvent, sortByIdDescending }) => {
                 <span>Insert Speaker</span>
               </Button>
               &nbsp;
-              <Button color="info" onClick={sortByIdDescending}>
+              <Button color="info" onClick={() => {
+                const { speakers } = apolloClient.cache.readQuery({
+                  query: GET_SPEAKERS
+                })
+                apolloClient.cache.writeQuery({
+                  query: GET_SPEAKERS,
+                  data: {
+                    speakers: {
+                      __typename: "SpeakersResult",
+                      datalist: [...speakers.datalist].sort((a,b) => b.id - a.id)
+                    }
+                  }
+                })
+              }}>
                 <span>Sort Speakers By Id Descending</span>
               </Button>
               <Modal isOpen={modal} toggle={toggle}>

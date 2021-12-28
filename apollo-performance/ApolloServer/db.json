@@ -1,16 +1,16 @@
 {
   "speakers": [
     {
-      "first": "cool",
-      "last": "cool",
-      "favorite": false,
-      "id": 47345
+      "first": "opa",
+      "last": "apo",
+      "favorite": true,
+      "id": 47348
     },
     {
-      "first": "teste",
-      "last": "teste",
-      "favorite": true,
-      "id": 47346
+      "first": "yep",
+      "last": "upe",
+      "favorite": false,
+      "id": 47349
     }
   ]
 }
