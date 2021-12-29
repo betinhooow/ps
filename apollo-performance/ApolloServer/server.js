@@ -15,12 +15,17 @@ const typeDefs = gql`
     favorite: Boolean
   }
 
+  type PageInfo {
+    totalItemCount: Int
+  }
+
   type SpeakerResults {
-    datalist: [Speaker]
+    datalist: [Speaker],
+    pageInfo: PageInfo
   }
 
   type Query {
-    speakers: SpeakerResults
+    speakers(offset: Int = 0, limit: Int = -1): SpeakerResults
   }
 
   type Mutation {
@@ -34,8 +39,14 @@ const resolvers = {
   Query: {
     async speakers(parent, args, context, info) {
       const response = await axios.get("http://localhost:5000/speakers");
+      const { offset, limit } = args;
       return {
-        datalist: response.data,
+        datalist: response.data.filter((rec, index) => {
+          return index > offset - 1 && (offset + limit > index || limit == -1)
+        }),
+        pageInfo: {
+          totalItemCount: response.data.length
+        }
       };
     },
   },

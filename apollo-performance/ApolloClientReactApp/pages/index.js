@@ -1,7 +1,7 @@
-import SpeakerListitems from '../components/SpeakerListitems';
+import SpeakerListItems from '../components/SpeakerListitems';
 
 const IndexPage = () => {
-  return <SpeakerListitems />
+  return <SpeakerListItems />
 }
 
 export default IndexPage;
